@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>岚牌智能空调</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e0e0e0, #f5f5f5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #26323;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .air-conditioner {
+            width: 90%;
+            max-width: 420px;
+            height: 160px;
+            background: #ffffff;
+            border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            position: relative;
+            margin-bottom: 40px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+
+        .energy-label {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 60px;
+            background: linear-gradient(135deg, #00c853, #00a000);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        .energy-label .level {
+            font-size: 22px;
+        }
+        .energy-label .text {
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .temp-display {
+            position: absolute;
+            right: 25px;
+            top: 32px;
+            font-size: 34px;
+            font-weight: bold;
+            color: #1976d2;
+            z-index: 2;
+        }
+
+        .status {
+            position: absolute;
+            right: 25px;
+            top: 75px;
+            font-size: 13px;
+            color: #666;
+            z-index: 2;
+        }
+
+        .air-outlet {
+            position: absolute;
+            bottom: 0;
+            left: 70px;
+            right: 20px;
+            height: 40px;
+            background: #e0e0e0;
+            border-top: 2px solid #ccc;
+            z-index: 1;
+        }
+        .outlet-blinds {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            padding: 0 5px;
+        }
+        .blind {
+            width: 100%;
+            height: 5px;
+            background: #ccc;
+            border-radius: 2px;
+        }
+
+        /* 加粗波浪风线条 */
+        .wind {
+            position: absolute;
+            bottom: 40px;
+            left: 70px;
+            right: 20px;
+            height: 100px;
+            display: none;
+            z-index: 0;
+        }
+
+        .wind.cool .wave-line {
+            background: linear-gradient(to top, rgba(100, 181, 247, 0.7), transparent);
+        }
+        .wind.hot .wave-line {
+            background: linear-gradient(to top, rgba(255, 110, 64, 0.7), transparent);
+        }
+
+        /* 线条加粗到 4px */
+        .wave-line {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            height: 100px;
+            border-radius: 50%;
+            opacity: 0;
+            clip-path: polygon(0 0, 100% 20%, 0 40%, 100% 60%, 0 80%, 100% 100%);
+        }
+
+        .wave-line.slow { animation: wave 2.2s infinite ease-in-out; }
+        .wave-line.mid  { animation: wave 1.4s infinite ease-in-out; }
+        .wave-line.fast { animation: wave 0.8s infinite ease-in-out; }
+
+        @keyframes wave {
+            0% { transform: translateY(0); opacity: 0; }
+            30% { opacity: 0.8; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        .remote {
+            width: 90%;
+            max-width: 320px;
+            background: #263238;
+            border-radius: 25px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .remote-screen {
+            width: 100%;
+            height: 80px;
+            background: #1a2228;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4fc3f7;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .remote-btn {
+            height: 55px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        .remote-btn:active { transform: scale(0.95); }
+        .power { background: #f44336; }
+        .temp-up { background: #1976d2; }
+        .temp-down { background: #0288d2; }
+        .mode { background: #388e3c; }
+        .fan { background: #f57c00; }
+        .sleep { background: #7b1fa2; }
+    </style>
+</head>
+
+<body>
+    <h1 class="title">岚牌随身空调</h1>
+
+    <div class="air-conditioner" id="ac">
+        <div class="energy-label">
+            <div class="level">1</div>
+            <div class="text">能效</div>
+        </div>
+
+        <div class="temp-display" id="acTemp">26℃</div>
+        <div class="status" id="acStatus">待机</div>
+
+        <div class="air-outlet">
+            <div class="outlet-blinds">
+                <div class="blind"></div>
+                <div class="blind"></div>
+                <div class="blind"></div>
+            </div>
+        </div>
+
+        <div class="wind" id="windAnim">
+            <div class="wave-line" style="left:15%; animation-delay:0s"></div>
+            <div class="wave-line" style="left:38%; animation-delay:0.2s"></div>
+            <div class="wave-line" style="left:60%; animation-delay:0.4s"></div>
+            <div class="wave-line" style="left:85%; animation-delay:0.6s"></div>
+        </div>
+    </div>
+
+    <div class="remote">
+        <div class="remote-screen" id="remoteScreen">26℃ | 待机</div>
+        <div class="btn-group">
+            <button class="remote-btn power" id="powerBtn">电源</button>
+            <button class="remote-btn temp-up" id="tempUp">温度+</button>
+            <button class="remote-btn temp-down" id="tempDown">温度-</button>
+            <button class="remote-btn mode" id="modeBtn">模式</button>
+            <button class="remote-btn fan" id="fanBtn">风速</button>
+            <button class="remote-btn sleep" id="sleepBtn">睡眠</button>
+        </div>
+    </div>
+
+    <!-- 你的声音文件 -->
+    <audio id="clickSound" src="c.mp3"></audio>
+    <audio id="windSound" src="wind.mp3" loop></audio>
+
+    <script>
+        const powerBtn = document.getElementById('powerBtn');
+        const tempUp = document.getElementById('tempUp');
+        const tempDown = document.getElementById('tempDown');
+        const acTemp = document.getElementById('acTemp');
+        const acStatus = document.getElementById('acStatus');
+        const remoteScreen = document.getElementById('remoteScreen');
+        const windAnim = document.getElementById('windAnim');
+        const modeBtn = document.getElementById('modeBtn');
+        const fanBtn = document.getElementById('fanBtn');
+        const waveLines = document.querySelectorAll('.wave-line');
+
+        const clickSound = document.getElementById('clickSound');
+        const windSound = document.getElementById('windSound');
+
+        let isPowerOn = false;
+        let temperature = 26;
+        let mode = '制冷';
+        let fanSpeed = '自动';
+
+        // 滴一声
+        function playClick() {
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e=>{});
+        }
+
+        function startWind() {
+            windSound.currentTime = 0;
+            windSound.play().catch(e=>{});
+        }
+        function stopWind() {
+            windSound.pause();
+            windSound.currentTime = 0;
+        }
+
+        function updateWindStyle() {
+            windAnim.className = 'wind';
+            waveLines.forEach(w => w.className = 'wave-line');
+
+            mode === '制热' ? windAnim.classList.add('hot') : windAnim.classList.add('cool');
+
+            let speed = 'mid';
+            if (fanSpeed === '低速') speed = 'slow';
+            if (fanSpeed === '高速') speed = 'fast';
+            
+            waveLines.forEach(w => w.classList.add(speed));
+        }
+
+        function updateDisplay() {
+            acTemp.textContent = `${temperature}℃`;
+            updateWindStyle();
+
+            if (isPowerOn) {
+                acStatus.textContent = `${mode} | ${fanSpeed}`;
+                remoteScreen.textContent = `${temperature}℃ | ${mode}`;
+                windAnim.style.display = 'block';
+                startWind();
+            } else {
+                acStatus.textContent = '待机';
+                remoteScreen.textContent = `${temperature}℃ | 待机`;
+                windAnim.style.display = 'none';
+                stopWind();
+            }
+        }
+
+        // ======================
+        // 电源键 → 也有滴声
+        // ======================
+        powerBtn.addEventListener('click', () => {
+            isPowerOn = !isPowerOn;
+            playClick(); // 加上音效
+            updateDisplay();
+        });
+
+        tempUp.addEventListener('click', () => {
+            if (!isPowerOn) return;
+            playClick();
+            if (temperature < 32) temperature++;
+            updateDisplay();
+        });
+
+        tempDown.addEventListener('click', () => {
+            if (!isPowerOn) return;
+            playClick();
+            if (temperature > 16) temperature--;
+            updateDisplay();
+        });
+
+        modeBtn.addEventListener('click', () => {
+            if (!isPowerOn) return;
+            playClick();
+            const modes = ['制冷', '制热', '送风', '除湿'];
+            mode = modes[(modes.indexOf(mode) + 1) % 4];
+            updateDisplay();
+        });
+
+        fanBtn.addEventListener('click', () => {
+            if (!isPowerOn) return;
+            playClick();
+            const speeds = ['自动', '低速', '中速', '高速'];
+            fanSpeed = speeds[(speeds.indexOf(fanSpeed) + 1) % 4];
+            updateDisplay();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
